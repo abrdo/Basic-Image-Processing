@@ -17,7 +17,11 @@ function mrf=gmrf_initClassMaskMAP(mrf)
             
             
             
-            
+            tmpvector = zeros(mrf.classnum,1); % init the tmp vector for store the classvalues at each pixel
+            for cind = 1:mrf.classnum
+                tmpvector(cind) = mrf.logProbs{cind}(y,x);
+            end
+            [minval, minind] = min(tmpvector); 
             
             
             

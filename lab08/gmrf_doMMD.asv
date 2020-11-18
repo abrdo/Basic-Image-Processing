@@ -30,12 +30,11 @@ function mrf=gmrf_doMMD(mrf)
                 currLabel = mrf.classmask(y,x);
                 
                 
-                
                 neighbourLabels = zeros(3,3);
                 x1 = 1;
                 x2 = 3;
                 y1 = 1;
-                y2 = 3;
+                y1 = 3;
                 if y-1 < 1
                     y1 = 2;
                 end
@@ -49,8 +48,6 @@ function mrf=gmrf_doMMD(mrf)
                     x2 = 2;
                 end
                 neighbourLabels(y1:y2, x1:x2) = mrf.classmask(max([y-1 1]) : min(y+1,mrf.imagesize(1)),   max([x-1 1]) : min(x+1, mrf.imagesize(2)));
-                
-                
                 
                 curr_posterior = mrf.logProbs{currLabel}(y, x);
                 curr_prior = beta +   sum(sum(beta .* (neighbourLabels == currLabel) + -beta .* (neighbourLabels ~= currLabel & neighbourLabels ~= 0)));
@@ -70,7 +67,7 @@ function mrf=gmrf_doMMD(mrf)
                 end
                 
                 
-                tryal_posterior = curr_posterior;
+                tryal_posterior = curr_posterior(y,x);
                 tryal_prior = beta +   sum(sum(-beta .* (tryal_neighbourLabels == currLabel) + beta .* (tryal_neighbourLabels ~= currLabel & tryal_neighbourLabels ~= 0)));
                
                 curr_U = curr_posterior + curr_prior;

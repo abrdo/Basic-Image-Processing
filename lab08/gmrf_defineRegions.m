@@ -34,11 +34,12 @@ function mrf = gmrf_defineRegions(params, mrf)
         %                                        %
         % ====================================== %
         
-        
-        
-        
-        
-        
+        r = rects{ind};
+        slice = params.InputImage(r.y1:r.y2, r.x1:r.x2); % rectangle training sample from the img
+        mrf.gauss_params{ind}.mean = mean(double(slice(:)));
+        mrf.gauss_params{ind}.dev = std(double(slice(:)));
+        %%% normal probability density function:
+        mrf.logProbs{ind} = -log(normpdf(double(params.InputImage), mrf.gauss_params{ind}.mean, mrf.gauss_params{ind}.dev));
         
                 
         % ====================================== %
