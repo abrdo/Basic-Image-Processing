@@ -22,20 +22,20 @@ function mrf=gmrf_doMMD(mrf)
         %                                        %
         % ====================================== %
         
-        summa_deltE = 0;
+        summa_deltaE = 0;
         cycle = cycle + 1;
         
-        for y = 1:mrf.imagesize(1)
-            for x = 1:mrf.imagesize(2)
+        for y = 1:h
+            for x = 1:w
+                % CURRENT
                 currLabel = mrf.classmask(y,x);
-                
-                
+                %%%
                 
                 neighbourLabels = zeros(3,3);
-                x1 = 1;
-                x2 = 3;
                 y1 = 1;
                 y2 = 3;
+                x1 = 1;
+                x2 = 3;
                 if y-1 < 1
                     y1 = 2;
                 end
@@ -53,54 +53,69 @@ function mrf=gmrf_doMMD(mrf)
                 
                 
                 curr_posterior = mrf.logProbs{currLabel}(y, x);
-                curr_prior = beta +   sum(sum(beta .* (neighbourLabels == currLabel) + -beta .* (neighbourLabels ~= currLabel & neighbourLabels ~= 0)));
+                tmp = -beta .* (neighbourLabels == currLabel) + beta .* (neighbourLabels ~= currLabel & neighbourLabels ~= 0);
+                curr_prior = beta +    sum(sum(tmp));
                 
-                while true
-                    changeY = ceil(3*rand);
-                    changeX = ceil(3*rand);
-                    if (~(changeX == 1 & changeY == 1) & neighbourLabels(changeY, changeX)~=0)
-                        break;
-                    end
+                % NEW TRIAL
+                tryalLabel = currLabel;
+                while isequal(tryalLabel, currLabel)
+                    tryalLabel = randi(cnum);
                 end
                 
                 
-                tryal_neighbourLabels = neighbourLabels;
-                while isequal(tryal_neighbourLabels, neighbourLabels)
-                    tryal_neighbourLabels(changeY, changeX) = ceil(mrf.classnum*rand);
-                end
-                
-                
-                tryal_posterior = curr_posterior;
-                tryal_prior = beta +   sum(sum(-beta .* (tryal_neighbourLabels == currLabel) + beta .* (tryal_neighbourLabels ~= currLabel & tryal_neighbourLabels ~= 0)));
+                tryal_posterior = mrf.logProbs{tryalLabel}(y,x);
+                tryal_prior = beta +    sum(sum(-beta .* (neighbourLabels == tryalLabel) + beta .* (neighbourLabels ~= tryalLabel & neighbourLabels ~= 0)));
                
+                % ENERGY FUNCTION
                 curr_U = curr_posterior + curr_prior;
                 tryal_U = tryal_posterior + tryal_prior;
                 
                 dU = tryal_U - curr_U;
                 
-                
-                if (dU <= 0 | rand < exp(-dU/T))
-                    mrf.classmask(y+changeY-2, x+changeX-2) = tryal_neighbourLabels(changeY, changeX);
+                % accept?
+                if dU < 0 || (dU > 0 && rand < exp(-dU/T))
+                    mrf.classmask(y,x) = tryalLabel;
                     summa_deltaE = summa_deltaE + abs(dU);
                 end
                 
             end
         end
+        T = c*T;
         
         
         
         
         
-        %n = (min(y+1,size(mrf.classmask,1)) - max([y-1 1]) +1) * (min(x+1,size(mrf.classmask,2)) -max([x-1 1]) +1);
-%         neighbourLabels = zeros(10);
-%         k = 1;
-%         for yi = max([y-1 1]) : min(y+1,size(mrf.classmask,1))
-%             for xi = max([x-1 1]) : min(x+1,size(mrf.classmask,2))
-%                 neighbourLabels(k) = mrf.calssmask(yi,xi);
-%                 k= k+1;
-%             end
-%         end
-        
+%                 % NEW TRIAL
+%                 while true
+%                     changeY = ceil(3*rand);
+%                     changeX = ceil(3*rand);
+%                     if (~(changeX == 2 & changeY == 2) & neighbourLabels(changeY, changeX)~=0)
+%                         break;
+%                     end
+%                 end
+%                 
+%                 
+%                 tryal_neighbourLabels = neighbourLabels;
+%                 while isequal(tryal_neighbourLabels, neighbourLabels)
+%                     tryal_neighbourLabels(changeY, changeX) = ceil(mrf.classnum*rand);
+%                 end
+%                 
+%                 
+%                 tryal_posterior = curr_posterior;
+%                 tryal_prior = beta +    sum(sum(-beta .* (tryal_neighbourLabels == currLabel) + beta .* (tryal_neighbourLabels ~= currLabel & tryal_neighbourLabels ~= 0)));
+%                
+%                 % ENERGY FUNCTION
+%                 curr_U = curr_posterior + curr_prior;
+%                 tryal_U = tryal_posterior + tryal_prior;
+%                 
+%                 dU = tryal_U - curr_U;
+%                 
+%                 % accept?
+%                 if dU < 0 || (dU > 0 && rand < exp(-dU/T))
+%                     mrf.classmask(y+changeY-2, x+changeX-2) = tryal_neighbourLabels(changeY, changeX);
+%                     summa_deltaE = summa_deltaE + abs(dU);
+%                 end
         
         
         
