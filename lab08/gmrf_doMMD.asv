@@ -29,14 +29,32 @@ function mrf=gmrf_doMMD(mrf)
             for x = 1:w
                 % CURRENT
                 currLabel = mrf.classmask(y,x);
+                %%%
                 
-                neighbourLabels = mrf.classmask(max([y-1 1]) : min(y+1,mrf.imagesize(1)),   max([x-1 1]) : min(x+1, mrf.imagesize(2)));
+                neighbourLabels = zeros(3,3);
+                y1 = 1;
+                y2 = 3;
+                x1 = 1;
+                x2 = 3;
+                if y-1 < 1
+                    y1 = 2;
+                end
+                if mrf.imagesize(1) < y+1
+                    y2 = 2;
+                end
+                if x-1 < 1
+                    x1 = 2;
+                end
+                if mrf.imagesize(2) < x+1
+                    x2 = 2;
+                end
+                neighbourLabels(y1:y2, x1:x2) = mrf.classmask(max([y-1 1]) : min(y+1,mrf.imagesize(1)),   max([x-1 1]) : min(x+1, mrf.imagesize(2)));
                 
                 
                 
                 curr_posterior = mrf.logProbs{currLabel}(y, x);
-                curr_prior = sum(sum(-beta .* (neighbourLabels == currLabel) + beta .* (neighbourLabels ~= currLabel & neighbourLabels ~= 0)));
-                curr_prior = curr_prior + beta; % because the current pixel was also in it
+                tmp = -beta .* (neighbourLabels == currLabel) + beta .* (neighbourLabels ~= currLabel & neighbourLabels ~= 0);
+                curr_prior = beta +    sum(sum(tmp));
                 
                 % NEW TRIAL
                 tryalLabel = currLabel;
@@ -47,7 +65,7 @@ function mrf=gmrf_doMMD(mrf)
                 
                 tryal_posterior = mrf.logProbs{tryalLabel}(y,x);
                 tryal_prior = sum(sum(-beta .* (neighbourLabels == tryalLabel) + beta .* (neighbourLabels ~= tryalLabel & neighbourLabels ~= 0)));
-                tryal_prior = tryal_prior - beta; % because the current pixel was also in it
+                tryal_prior = tryal_prior - beta % because the current pixels 
                 
                 % ENERGY FUNCTION
                 curr_U = curr_posterior + curr_prior;
