@@ -1,0 +1,11 @@
+function [x_tilde] = restoration_wiener_white(y, h, var_n)
+    Y = fft2(y);
+    H = psf2otf(h, [size(Y,1), size(Y,2)]);
+    
+    % noise to signal power ration:
+    NSPR = var_n / var(y(:));
+    
+    R = conj(H) ./ (abs(H).^2 + NSPR);
+    
+    x_tilde = abs(ifft2(R.*Y));
+end
